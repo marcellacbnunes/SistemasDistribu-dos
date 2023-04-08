@@ -1,0 +1,65 @@
+using System.ComponentModel;
+using System.Net;
+using System.Net.Sockets;
+
+namespace Servidor
+{
+
+#pragma warning disable
+    class Servidor {
+        private const string HOST = "127.0.0.1";
+        private const int PORTA = XXXX;
+        // Definindo um objeto do tipo Semaphore que vai atender vários clientes.
+        // Ele é que irá agir como o coordenador nesse caso.
+        private static Semaphore coordenador = new Semaphore(1, int.MaxValue);
+        private static List<DateTime> listaHoras = new List<DateTime>();
+
+        private static void RecebeHora(object arg) {
+            coordenador.WaitOne();
+            TcpClient cliente = (TcpClient) arg;
+            try {
+                // Usado para pegar a hora do cliente.
+                StreamReader leituraHora = new StreamReader(cliente.GetStream());
+                listaHoras.Add(DateTime.Parse(leituraHora.ReadLine()));
+
+            } catch (IOException) {
+                System.Console.WriteLine("Cliente desconectado, ou com problema na conexão");
+            } 
+            // Thread atual é liberada para outra thread executar.
+            // Este método decrementa a contagem do semáforo.
+            coordenador.Release();
+        }    
+
+        static void Main() {
+            TcpListener listener = null;
+            try {
+                // Objeto do tipo TcpListener que vai ficar aguardando por novas conexões
+                listener = new TcpListener(IPAddress.Parse(HOST), PORTA);
+                listener.Start();
+                System.Console.WriteLine("Rodando em " + HOST + ":" + PORTA);
+
+                
+
+                while (true) {
+                    // Aceita a conexão com diversos cliente.
+                    TcpClient cliente = listener.AcceptTcpClient();
+                    // Cria uma nova thread indicando que ela deverá executar
+                    // o método "RecebeHora".
+                    Thread t = new Thread(RecebeHora);
+                    
+                    // Inicia a thread passando o cliente que foi aceito anteriormente.
+                    t.Start(cliente);
+                    Console.WriteLine(String.Join(';', listaHoras));
+
+                }
+
+
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            } finally {
+                if (listener != null)
+                    listener.Stop();
+            }
+        }
+    }
+}
