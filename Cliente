@@ -1,0 +1,30 @@
+using System.Net.Sockets;
+
+namespace Cliente
+{
+#pragma warning disable
+    class Cliente {
+
+        static void Main() {
+            try {
+                // Cria novo obj TcpClient se conectando no host 127.0.0.1, porta XXXX
+                TcpClient cliente = new TcpClient("127.0.0.1", XXXX);
+                // Usado para enviar mensagens ao servidor.
+                StreamWriter escrita = new StreamWriter(cliente.GetStream());
+                // Usado para ler mensagens do servidor.
+                StreamReader leitura = new StreamReader(cliente.GetStream());
+                
+                DateTime dataAtual = DateTime.Now;
+                double numero = new Random(Guid.NewGuid().GetHashCode()).Next(-10, 10);
+                //adiciona minutos na data atual, entre 0 e 10
+
+                dataAtual = dataAtual.AddMinutes(numero);
+                escrita.WriteLine(dataAtual.ToString());
+                escrita.Flush();
+
+            } catch(Exception e) {
+                Console.WriteLine(e);
+            }
+        }
+    }
+}
